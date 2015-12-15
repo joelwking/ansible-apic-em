@@ -8,6 +8,7 @@
      17 July 2015  |  1.0 - initial release
      20 July 2015  |  1.1 - added documentation and error checking
      15 Dec  2015  |  1.2 - Updates for the GA release, APIC-EM Version 1.0.1.30
+                      1.3 - Documentation update
  
 """
 
@@ -15,19 +16,17 @@ DOCUMENTATION = '''
 ---
 module: apic_em_gather_facts
 author: Joel W. King, World Wide Technology
-version_added: "1.2"
+version_added: "1.3"
 short_description: query the APIC-EM controller for an inventory of network devices.
 description:
     - This module issues a query of an APIC-EM controller to obtain the addresss of network devices in the inventory
     - and return this to the playbook for subsequent tasks in a playbook. The APIC-EM is designed to be a
-    - "single source of truth" for the network inventory.
+    - single source of truth for the network inventory.
 
 
 references:
-    - http://docs.ansible.com/add_host_module.html
-    - https://pynet.twb-tech.com/blog/ansible/dynamic-inventory.html
+    - The API documenation is available via the web interface of the APIC-EM server
 
- 
 requirements:
     - none
 
@@ -57,7 +56,31 @@ options:
 
 EXAMPLES = '''
 
+    Module
+
     $ ansible localhost -m apic_em_gather_facts.py -a "host=10.255.93.205 username=admin password=redacted\!"
+
+    Playbook
+
+    ---
+    #
+    - name:  Gather facts using APIC-EM
+      hosts:  localhost
+      connection: local
+      gather_facts: no
+
+      tasks:
+      - name: test
+        apic_em_gather_facts:
+           host: 192.0.2.1      # APIC-EM server
+           username: admin
+           password: redacted
+
+      - name: test
+        debug: msg="{{item.managementIpAddress}} {{item.series}}"
+        with_items: network_device
+
+
 
 
 '''
