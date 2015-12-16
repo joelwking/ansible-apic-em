@@ -1,0 +1,67 @@
+#!/usr/bin/ansible-playbook
+---
+#
+#      Copyright (c) 2015 World Wide Technology, Inc.
+#      All rights reserved.
+#
+#      author: Joel W. King, World Wide Technology
+#
+#
+- name:  Issue a series of show commands to an IOS device and collect the output
+  hosts:  APIC_EM
+  connection: local
+  gather_facts: no
+
+  vars:
+   runcmd:
+     - show running-config
+     - show version
+     - show license
+     - show inventory
+     - show module
+     - show cdp neighbor detail
+     - show spanning-tree
+     - show vlan
+     - show interface trunk
+     - show etherchannel
+     - show interface port channel
+     - show processes cpu
+     - show environment all
+     - show ip protocols
+     - show ip route
+     - show ip bgp
+     - show ip bgp summary
+     - show ip bgp neighbor detail
+     - show ip ospf neighbor
+     - show ip ospf interface
+     - show ip ospf database
+     - show ip ospf neighbor detail
+     - show ip interface brief
+     - show ntp status
+     - show logging
+     - show policy-map
+     - show policy-map interface
+     - show ip sla statistics
+     - show ip sla statistics detail
+     - show ip sla statistics aggregate
+
+  tasks:
+  - name: Decrypt the password file
+    include_vars: "./passwords.yml"
+
+  - name: Use APIC-EM controller to return a list of discovered devices
+    apic_em_gather_facts:
+     host: 10.255.40.125
+     username: admin
+     password: "{{password}}"
+
+  - name: Issue the commands specified in the list runcmd and output to a file
+    cisco_ios_show:
+      host: "{{item.managementIpAddress}}"
+      username: "{{username}}"
+      password: "{{password}}"
+      enablepw: "{{enable_password}}"                      # Optional
+      commands: "{{runcmd}}"
+      dest: "{{dest}}"
+      debug: "{{debug}}"                                   # Optional
+    with_items: network_device
