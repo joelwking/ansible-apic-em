@@ -7,9 +7,9 @@ https://communities.cisco.com/community/developer/blog/2015/07/20/using-apic-em-
 # Use Case
 
 This module issues a query to an APIC-EM controller for all reachable network devices and returns the variables documeted in the
-https://<apic-em>/swagger#!/network-device/getAllNetworkDevice API.
+https://apic-em-host/swagger#!/network-device/getAllNetworkDevice API.
 
-A sample playbook (ios_show.yml) is included in the repository, which would be used with this sample inventory file and group_vars file.
+A sample playbook (ios_show.yml) is included in this repository, which would be used with this sample inventory file and group_vars file.
 
 ~/ansible/playbooks/hosts
 ```
