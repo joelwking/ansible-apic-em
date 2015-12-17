@@ -1,0 +1,41 @@
+#!/usr/bin/ansible-playbook
+---
+#
+#      Copyright (c) 2015 World Wide Technology, Inc.
+#      All rights reserved.
+#
+#      author: Joel W. King, World Wide Technology
+#
+#
+- name:  Issue a series of show commands to an IOS device and collect the output
+  hosts:  APIC_EM
+  connection: local
+  gather_facts: no
+
+  vars:
+   runcmd:
+     - show version | inc Last reload type
+     - show ip int  | inc Internet address is
+     - show inventory
+     - show hardware | inc uptime
+
+  tasks:
+  - name: Decrypt the password file
+    include_vars: "./passwords.yml"
+
+  - name: Use APIC-EM controller to return a list of discovered devices
+    apic_em_gather_facts:
+     host: 10.255.40.125
+     username: admin
+     password: "{{password}}"
+
+
+  - name: Issue the commands specified in the list runcmd and output to a file
+    cisco_ios_show:
+      host: "{{item.managementIpAddress}}"
+      username: "{{username}}"
+      password: "{{password}}"
+      commands: "{{runcmd}}"
+      dest: "{{dest}}"
+    with_items: network_device
+    when:  item.softwareVersion == '15.3(3)M5' and item.platformId == 'CISCO2911/K9'
