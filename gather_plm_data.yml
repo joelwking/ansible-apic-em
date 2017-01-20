@@ -1,21 +1,62 @@
-#!/usr/bin/ansible-playbook
+#!/usr/bin/ansible-playbook 
 ---
 #
-#      Copyright (c) 2015 World Wide Technology, Inc.
+#      Copyright (c) 2017 World Wide Technology, Inc.
 #      All rights reserved.
 #
 #      author: Joel W. King, World Wide Technology
 #
+#      Notes:
 #
-- name:  Issue a series of show commands to an IOS device and collect the output
-  hosts:  APIC_EM
+#      Given you have a inventory (hosts) file for Ansible which includes
+#      an entry similiar to the following:
+#
+#      [APIC_EM]
+#      apic_em_ga.sandbox.wwtatc.local ansible_ssh_user=administrator
+#
+#      Assuming your APIC EM and your network devices use the same admin userid
+#      and password and enable password, create (and encrypt with ansible-vault) 
+#      the file password.yml
+#
+#      password: mysecretpassword
+#    
+#      Now execute the playbook, the long-hand version would look like this:
+#     
+#      ~/ansible/playbooks$ ansible-playbook -i hosts gather_plm_data.yml --ask-vault
+#
+#
+#      The shorthand version can be run like this:
+#
+#      ~/ansible/playbooks$ ./gather_plm_data.yml
+#
+#      Assuming you have your ansible.cfg file modified as such:
+#
+#      inventory      = $HOME/ansible/playbooks/hosts
+#      library        = /usr/share/ansible/
+#
+#      have your vault password in a file valud_pass.txt 
+#    
+#      and have set these environmental variables, along with the shebang shown in line 1
+#      of this file.
+#
+#      export ANSIBLE_CONFIG="$HOME/ansible/playbooks/ansible.cfg"
+#      export ANSIBLE_VAULT_PASSWORD_FILE="$HOME/ansible/playbooks/vault_pass.txt"
+#      export PYTHONPATH="/usr/share/ansible"       
+#
+#
+- name:  Issue a series of show commands to an IOS device and collect the output 
+  hosts: APIC_EM  
   connection: local
   gather_facts: no
-
+ 
   vars:
+   dest: /tmp
+   admin:
+      user: admin
    runcmd:
      - show version | inc Last reload type
      - show ip int  | inc Internet address is
+     - show license
      - show inventory
      - show hardware | inc uptime
 
@@ -23,19 +64,20 @@
   - name: Decrypt the password file
     include_vars: "./passwords.yml"
 
-  - name: Use APIC-EM controller to return a list of discovered devices
+  - name: Use APIC-EM controller to return a list of discovered network devices
     apic_em_gather_facts:
-     host: 10.255.40.125
-     username: admin
-     password: "{{password}}"
+     host: "{{inventory_hostname}}" 
+     username:  "{{admin.user}}" 
+     password: "{{password}}" 
 
 
-  - name: Issue the commands specified in the list runcmd and output to a file
+  - name: Issue the commands specified in the list runcmd and write the output to files(s)
     cisco_ios_show:
       host: "{{item.managementIpAddress}}"
-      username: "{{username}}"
-      password: "{{password}}"
-      commands: "{{runcmd}}"
-      dest: "{{dest}}"
-    with_items: network_device
+      username: "{{admin.user}}" 
+      password: "{{password}}" 
+      enablepw: "{{password}}"
+      commands: "{{runcmd}}" 
+      dest: "{{dest}}" 
+    with_items: "{{network_device}}"  
     when:  item.softwareVersion == '15.3(3)M5' and item.platformId == 'CISCO2911/K9'
